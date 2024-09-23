@@ -1,4 +1,8 @@
-﻿namespace SnapshotRecorder;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Hosting;
+using SnapshotRecorder.Configuration;
+
+namespace SnapshotRecorder;
 
 internal static class Program
 {
@@ -6,14 +10,28 @@ internal static class Program
     
     private static async Task Main(string[] args)
     {
-        string uri = "rtsp://admin:UnpickedTreach75@192.168.50.240:554/ch01/0";
+        var configuration = new ConfigurationBuilder()
+            .SetBasePath(Directory.GetCurrentDirectory())
+            .AddJsonFile("appsettings.json")
+            .AddJsonFile("appsettings.development.json", true)
+            .Build();
 
-        string saveDir = @"C:\Users\alex.daniel\Pictures\rtsp";
-        var directory = new DirectoryInfo(saveDir);
-
-        await new Receiver(directory, "front").ReceiveAsync(uri);
-
-
+        IHostBuilder host = Host.CreateDefaultBuilder()
+            .ConfigureAppConfiguration(builder =>
+            {
+                builder.Sources.Clear();
+                builder.AddConfiguration(configuration);
+            })
+            .ConfigureHostOptions(options =>
+            {
+                options.ServicesStartConcurrently = true;
+                options.ServicesStopConcurrently = true;
+            })
+            .ConfigureServices((context, services) => 
+                services.ConfigureServices(context));
+        
+        await host.RunConsoleAsync().ConfigureAwait(false);
+        
 
     }
     

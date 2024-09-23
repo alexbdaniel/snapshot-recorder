@@ -26,16 +26,17 @@ namespace SnapshotRecorder
         /// <param name="outputImageFormat"></param>
         /// <param name="cancellationToken"></param>
         /// <param name="useShellExecute">Use the Operating System shell to start the process</param>
-        /// <returns></returns>
+        /// <param name="fps">Frames per second to capture</param>
+        /// /// <returns></returns>
         public async Task StartFrameReaderAsync(
             InputSource inputSource,
             OutputImageFormat outputImageFormat,
             CancellationToken cancellationToken = default,
-            bool useShellExecute = false)
+            bool useShellExecute = false,
+            float fps = 7)
         {
             var inputArgs = $"-y {inputSource.InputCommand}";
-            var outputArgs = $" -r 0.2 -c:v {outputImageFormat.ToString().ToLower()} -f image2pipe -";
-            
+            var outputArgs = $" -r {fps} -c:v {outputImageFormat.ToString().ToLower()} -f image2pipe -";
             
             var startInfo = new ProcessStartInfo
             {
