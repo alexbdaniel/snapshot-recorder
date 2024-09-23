@@ -34,9 +34,8 @@ namespace SnapshotRecorder
             bool useShellExecute = false)
         {
             var inputArgs = $"-y {inputSource.InputCommand}";
-            var outputArgs = $"-c:v {outputImageFormat.ToString().ToLower()} -f image2pipe -";
-
-            Console.WriteLine("hi");
+            var outputArgs = $" -r 0.2 -c:v {outputImageFormat.ToString().ToLower()} -f image2pipe -";
+            
             
             var startInfo = new ProcessStartInfo
             {

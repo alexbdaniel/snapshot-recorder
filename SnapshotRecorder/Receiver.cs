@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+
 namespace SnapshotRecorder;
 
 public class Receiver
@@ -7,10 +9,12 @@ public class Receiver
 
     public Receiver(DirectoryInfo saveDirectory, string cameraName)
     {
-        this.saveDirectory = saveDirectory;
+        string directoryName = Path.Combine(saveDirectory.FullName, cameraName);
+        this.saveDirectory = Directory.CreateDirectory(directoryName);
         this.cameraName = cameraName;
     }
 
+    [SuppressMessage("ReSharper", "EventUnsubscriptionViaAnonymousDelegate")]
     public async Task ReceiveAsync(string sourceUri, CancellationToken cancellationToken = default)
     {
         Uri uri = new Uri(sourceUri);
@@ -18,23 +22,19 @@ public class Receiver
         
         var client = new VideoStreamClient();
 
-        client.NewImageReceived += bytes => NewImageReceived(bytes);
+        client.NewImageReceived += bytes => _ = HandleNewImageReceivedAsync(bytes);
         
-        client.NewImageReceived += NewImageReceived;
         await client.StartFrameReaderAsync(inputSource, OutputImageFormat.Bmp, cancellationToken);
         
-        client.NewImageReceived -= NewImageReceived;
+        client.NewImageReceived -= bytes => _ = HandleNewImageReceivedAsync(bytes);
     }
 
-    private void NewImageReceived(byte[] imageData)
+    private async Task HandleNewImageReceivedAsync(byte[] imageData)
     {
-        // Task.Delay(TimeSpan.FromSeconds(5));
-        
-        string directoryName = Path.Combine(saveDirectory.FullName, cameraName);
-        Directory.CreateDirectory(directoryName);
+        string filePath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.bmp");
 
-        string filePath = Path.Combine(directoryName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.bmp");
-        
-        File.WriteAllBytes(filePath, imageData);
+        await File.WriteAllBytesAsync(filePath, imageData);
     }
+    
+
 }
