@@ -1,0 +1,50 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net8.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Folder Include="ExeDependencies\" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <None Update="ffmpeg.exe">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Include="..\Nager.VideoStream\CustomInputSource.cs">
+        <Link>Nager.VideoStream\CustomInputSource.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\FileInputSource.cs">
+        <Link>Nager.VideoStream\FileInputSource.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\InputSource.cs">
+        <Link>Nager.VideoStream\InputSource.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\OutputImageFormat.cs">
+        <Link>Nager.VideoStream\OutputImageFormat.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\StreamInputSource.cs">
+        <Link>Nager.VideoStream\StreamInputSource.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\VideoStreamClient.cs">
+        <Link>Nager.VideoStream\VideoStreamClient.cs</Link>
+      </Compile>
+      <Compile Include="..\Nager.VideoStream\WebcamInputSource.cs">
+        <Link>Nager.VideoStream\WebcamInputSource.cs</Link>
+      </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Content Include="..\Nager.VideoStream\Nager.VideoStream.csproj">
+        <Link>Nager.VideoStream\Nager.VideoStream.csproj</Link>
+      </Content>
+    </ItemGroup>
+
+</Project>
