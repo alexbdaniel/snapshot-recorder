@@ -18,6 +18,9 @@ public static class ServiceConfiguration
     private static IServiceCollection ConfigureOptions(this IServiceCollection services, HostBuilderContext context)
     {
         services.AddOptions<ReceiverOptions>().Bind(context.Configuration.GetSection(ReceiverOptions.Key));
+
+        services.AddOptions<ConfigurationOptions>().Bind(context.Configuration.GetSection(ConfigurationOptions.Key))
+            .ValidateOnStart();
         
         return services;
     }
