@@ -4,8 +4,8 @@ namespace SnapshotRecorder
 {
     public class VideoStreamClient
     {
-        public event Action<byte[]> NewImageReceived;
-        public event Action<string> FFmpegInfoReceived;
+        public event Action<byte[]>? NewImageReceived;
+        public event Action<string>? FFmpegInfoReceived;
 
         private readonly string _ffmpegPath;
 
@@ -61,11 +61,11 @@ namespace SnapshotRecorder
                     var index = 0;
                     var buffer = new byte[32768];
                     var imageData = new List<byte>();
-                    byte[] imageHeader = null;
+                    byte[]? imageHeader = null;
 
                     while (!cancellationToken.IsCancellationRequested)
                     {
-                        var length = await frameOutputStream.ReadAsync(buffer, 0, buffer.Length);
+                        var length = await frameOutputStream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                         if (length == 0)
                         {
                             break;
@@ -106,7 +106,7 @@ namespace SnapshotRecorder
 
         private void ProcessDataReceived(object sender, DataReceivedEventArgs e)
         {
-            this.FFmpegInfoReceived?.Invoke(e.Data);
+            if (e.Data != null) this.FFmpegInfoReceived?.Invoke(e.Data);
         }
     }
 }

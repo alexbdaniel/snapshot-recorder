@@ -18,5 +18,5 @@ public class CaptureOptions
     [Required(AllowEmptyStrings = false)]
     public required string SaveRootDirectoryName { get; init; }
     
-    
+    public OutputImageFormat OutputImageFormat { get; init; } = OutputImageFormat.Bmp;
 }

@@ -22,24 +22,24 @@ public class Receiver
     [SuppressMessage("ReSharper", "EventUnsubscriptionViaAnonymousDelegate")]
     public async Task ReceiveAsync(Uri source, CancellationToken cancellationToken = default)
     {
-      
         var inputSource = new StreamInputSource(source);
         
         var client = new VideoStreamClient(configurationOptions.FfmpegFilePath);
 
-        client.NewImageReceived += bytes => _ = HandleNewImageReceivedAsync(bytes);
+        client.NewImageReceived += HandleNewImageReceivedAsync;
         
-        await client.StartFrameReaderAsync(inputSource, OutputImageFormat.Bmp, cancellationToken, false, captureOptions.Fps);
+        await client.StartFrameReaderAsync(inputSource, captureOptions.OutputImageFormat, cancellationToken, false, captureOptions.Fps);
+
+        client.NewImageReceived -= HandleNewImageReceivedAsync;
+    }
+
+    private async void HandleNewImageReceivedAsync(byte[] image)
+    {
+        string fullPath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.bmp");
         
-        client.NewImageReceived -= bytes => _ = HandleNewImageReceivedAsync(bytes);
+        await File.WriteAllBytesAsync(fullPath, image);
     }
     
-    private async Task HandleNewImageReceivedAsync(byte[] imageData)
-    {
-        string filePath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.bmp");
-
-        await File.WriteAllBytesAsync(filePath, imageData);
-    }
     
 
 }
