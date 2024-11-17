@@ -43,7 +43,7 @@ namespace SnapshotRecorder
             //-qscale:v 5
             // string inputArgs = $"-y {inputSource.InputCommand}";
             string inputArgs = $" -y {inputSource.InputCommand}";
-            string outputArgs = $" -qscale:v 1 -r {fps} -c:v {outputFormat.FfmpegCodec} -f image2pipe -";
+            string outputArgs = $" -qscale:v 2 -r {fps} -c:v {outputFormat.FfmpegCodec} -f image2pipe -";
             
             var startInfo = new ProcessStartInfo
             {
