@@ -7,6 +7,9 @@ public static class OptionsValidator
     public static bool Validate<TModel>(TModel model)
     {
         bool valid = MiniValidator.TryValidate(model, out IDictionary<string, string[]> errors);
+
+        if (valid)
+            return valid;
         
         Console.WriteLine($"{nameof(model)} has one or more validation errors:");
         foreach (var entry in errors)
@@ -18,8 +21,7 @@ public static class OptionsValidator
             }
         }
         
-        if (!valid)
-            Environment.Exit(1);
+        Environment.Exit(1);
         
         return valid;
     }

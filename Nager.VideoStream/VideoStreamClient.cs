@@ -118,13 +118,13 @@ namespace SnapshotRecorder
 
         private void HandleProcessOutput(object sender, DataReceivedEventArgs e)
         {
-            Console.WriteLine(e.Data);
+            logger.LogDebug(e.Data);
         }
 
         private void ProcessDataReceived(object sender, DataReceivedEventArgs e)
         {
             if (e.Data == null) return;
-            Console.WriteLine(e.Data);
+            logger.LogDebug(e.Data);
             // logger.LogError("VideoStreamClient error {eventArgs}", e);
             FFmpegInfoReceived?.Invoke(e.Data);
 
