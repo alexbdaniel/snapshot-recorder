@@ -39,8 +39,15 @@ public class Receiver
 
         string extension = captureOptions.OutputFormat.FileExtension;
         string fullPath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.{extension}");
-        
-        await File.WriteAllBytesAsync(fullPath, image);
+
+        try
+        {
+            await File.WriteAllBytesAsync(fullPath, image);
+        }
+        catch (IOException ex)
+        {
+            logger.LogError(ex, "An IO exception occured.");
+        }
     }
     
     
