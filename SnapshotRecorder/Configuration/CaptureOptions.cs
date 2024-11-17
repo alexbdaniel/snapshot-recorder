@@ -1,8 +1,10 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json.Serialization;
 
 namespace SnapshotRecorder.Configuration;
 
+[SuppressMessage("ReSharper", "MemberCanBePrivate.Global")]
 public class CaptureOptions
 {
     [Required(AllowEmptyStrings = false)]

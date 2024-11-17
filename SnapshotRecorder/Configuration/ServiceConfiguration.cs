@@ -21,10 +21,12 @@ public static class ServiceConfiguration
     {
         services.AddOptions<ReceiverOptions>().Bind(builder.Configuration.GetSection(ReceiverOptions.Key))
             .ValidateDataAnnotations()
+            .Validate(OptionsValidator.Validate)
             .ValidateOnStart();
 
         services.AddOptions<ConfigurationOptions>().Bind(builder.Configuration.GetSection(ConfigurationOptions.Key))
             .ValidateDataAnnotations()
+            .Validate(OptionsValidator.Validate)
             .ValidateOnStart();
         
         return services;

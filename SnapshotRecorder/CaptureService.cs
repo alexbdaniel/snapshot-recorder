@@ -23,29 +23,26 @@ public class CaptureService : BackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        // var tasks = GetTasks(stoppingToken);
-
         var options = receiverOptions.Cameras;
 
-        const string cameraName = "Front";
-        options.TryGetValue(cameraName, out CaptureOptions? captureOptions);
+        // options.TryGetValue(cameraName, out CaptureOptions? captureOptions);
 
-        using IServiceScope scope = serviceScopeFactory.CreateScope();
-        var receiver = scope.ServiceProvider.GetRequiredService<Receiver>();
         
         
         
         // var receiver = new Receiver(captureOptions!, cameraName, configurationOptions);
-        await receiver.ReceiveAsync(captureOptions, cameraName, stoppingToken);
-        //
-        // await Parallel.ForEachAsync(receiverOptions.Cameras, stoppingToken, async (pair, cancellationToken) =>
-        // {
-        //     string cameraName = pair.Key;
-        //     var captureOptions = pair.Value;
-        //     
-        //     var receiver = new Receiver(captureOptions, cameraName, configurationOptions);
-        //     await receiver.ReceiveAsync(captureOptions.StreamUri, cancellationToken);
-        // });
+        // await receiver.ReceiveAsync(captureOptions, cameraName, stoppingToken);
+        
+        await Parallel.ForEachAsync(receiverOptions.Cameras, stoppingToken, async (pair, cancellationToken) =>
+        {
+            string cameraName = pair.Key;
+            var captureOptions = pair.Value;
+            
+            using IServiceScope scope = serviceScopeFactory.CreateScope();
+            var receiver = scope.ServiceProvider.GetRequiredService<Receiver>();
+            
+            await receiver.ReceiveAsync(captureOptions, cameraName, cancellationToken);
+        });
 
     }
 

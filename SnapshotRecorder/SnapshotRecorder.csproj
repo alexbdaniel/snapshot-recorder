@@ -5,6 +5,16 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <OutputType>Exe</OutputType>
+        <AssemblyName>SnapshotRecorder</AssemblyName>
+    </PropertyGroup>
+    
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <PublishSingleFile>true</PublishSingleFile>
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+        
+    </PropertyGroup>
+    <PropertyGroup Label="Clean stack trace file paths" Condition="'$(Configuration)' == 'Release'">
+        <PathMap>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)'))=./</PathMap>
     </PropertyGroup>
 
     <ItemGroup>
@@ -60,6 +70,7 @@
       <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="8.0.2" />
       <PackageReference Include="Microsoft.Extensions.Options" Version="8.0.2" />
       <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" Version="8.0.0" />
+      <PackageReference Include="MiniValidation" Version="0.9.1" />
     </ItemGroup>
 
 
