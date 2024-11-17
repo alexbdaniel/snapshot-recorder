@@ -1,41 +1,44 @@
 using System.Diagnostics.CodeAnalysis;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using SnapshotRecorder.Configuration;
 
 namespace SnapshotRecorder;
 
 public class Receiver
 {
-    private readonly DirectoryInfo saveDirectory;
-    private readonly string cameraName;
-    private readonly CaptureOptions captureOptions;
     private readonly ConfigurationOptions configurationOptions;
+    private readonly ILogger logger;
 
-    public Receiver(CaptureOptions captureOptions, string cameraName, ConfigurationOptions configurationOptions)
+    public Receiver(IOptions<ConfigurationOptions> configurationOptions, ILogger<Receiver> logger)
     {
-        string directoryName = Path.Combine(captureOptions.SaveRootDirectoryName, captureOptions.SaveBaseDirectoryName);
-        saveDirectory = Directory.CreateDirectory(directoryName);
-        this.captureOptions = captureOptions;
-        this.cameraName = cameraName;
-        this.configurationOptions = configurationOptions;
+        this.configurationOptions = configurationOptions.Value;
+        this.logger = logger;
     }
     
     [SuppressMessage("ReSharper", "EventUnsubscriptionViaAnonymousDelegate")]
-    public async Task ReceiveAsync(Uri source, CancellationToken cancellationToken = default)
+    public async Task ReceiveAsync(CaptureOptions captureOptions, string cameraName, CancellationToken cancellationToken = default)
     {
-        var inputSource = new StreamInputSource(source);
+        var inputSource = new StreamInputSource(captureOptions.StreamUri);
         
-        var client = new VideoStreamClient(configurationOptions.FfmpegFilePath);
+        var client = new VideoStreamClient(logger, configurationOptions.FfmpegFilePath);
 
-        client.NewImageReceived += HandleNewImageReceivedAsync;
+        // client.NewImageReceived += HandleNewImageReceivedAsync;
         
-        await client.StartFrameReaderAsync(inputSource, captureOptions.OutputImageFormat, cancellationToken, false, captureOptions.Fps);
+        client.NewImageReceived += image => HandleNewImageReceivedAsync(image, captureOptions, cameraName); 
+        
+        await client.StartFrameReaderAsync(inputSource, captureOptions.OutputFormat, cancellationToken, false, captureOptions.Fps);
 
-        client.NewImageReceived -= HandleNewImageReceivedAsync;
+        client.NewImageReceived -= image => HandleNewImageReceivedAsync(image, captureOptions, cameraName); 
     }
 
-    private async void HandleNewImageReceivedAsync(byte[] image)
+    private async void HandleNewImageReceivedAsync(byte[] image, CaptureOptions captureOptions, string cameraName)
     {
-        string fullPath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.bmp");
+        string directoryName = Path.Combine(captureOptions.SaveRootDirectoryName, captureOptions.SaveBaseDirectoryName);
+        DirectoryInfo saveDirectory = Directory.CreateDirectory(directoryName);
+
+        string extension = captureOptions.OutputFormat.FileExtension;
+        string fullPath = Path.Combine(saveDirectory.FullName, $"{DateTime.UtcNow:yyyyMMddTHHmmssfffK}-{cameraName}.{extension}");
         
         await File.WriteAllBytesAsync(fullPath, image);
     }

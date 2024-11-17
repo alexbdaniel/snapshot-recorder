@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace SnapshotRecorder.Configuration;
 
@@ -17,6 +18,9 @@ public class CaptureOptions
     
     [Required(AllowEmptyStrings = false)]
     public required string SaveRootDirectoryName { get; init; }
-    
-    public OutputImageFormat OutputImageFormat { get; init; } = OutputImageFormat.Bmp;
+
+    [JsonConverter(typeof(OutputFileExtensionConverter))]
+    public OutputFileExtension OutputImageFormat { get; init; } = OutputFileExtension.Bmp;
+
+    public OutputFormat OutputFormat => new OutputFormat(OutputImageFormat);
 }

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using Microsoft.Extensions.Logging;
 
 namespace SnapshotRecorder
 {
@@ -6,53 +7,62 @@ namespace SnapshotRecorder
     {
         public event Action<byte[]>? NewImageReceived;
         public event Action<string>? FFmpegInfoReceived;
+        
+        private readonly ILogger logger;
 
-        private readonly string _ffmpegPath;
+        private readonly string exePath;
 
-        public VideoStreamClient(string ffmpegPath = "ffmpeg.exe")
+        public VideoStreamClient(ILogger logger, string exePath = "ffmpeg.exe")
         {
-            if (!File.Exists(ffmpegPath))
+            if (!File.Exists(exePath))
             {
-                throw new FileNotFoundException("Cannot found ffmpeg", ffmpegPath);
+                throw new FileNotFoundException("Cannot found ffmpeg", exePath);
             }
 
-            this._ffmpegPath = ffmpegPath;
+            this.logger = logger;
+            this.exePath = exePath;
         }
 
         /// <summary>
         /// Start Frame reader
         /// </summary>
         /// <param name="inputSource">The source of the image frames</param>
-        /// <param name="outputImageFormat"></param>
+        /// <param name="outputFormat"></param>
         /// <param name="cancellationToken"></param>
         /// <param name="useShellExecute">Use the Operating System shell to start the process</param>
         /// <param name="fps">Frames per second to capture</param>
         /// /// <returns></returns>
         public async Task StartFrameReaderAsync(
             InputSource inputSource,
-            OutputImageFormat outputImageFormat,
+            OutputFormat outputFormat,
             CancellationToken cancellationToken = default,
             bool useShellExecute = false,
             float fps = 7)
         {
-            var inputArgs = $"-y {inputSource.InputCommand}";
-            var outputArgs = $" -r {fps} -c:v {outputImageFormat.ToString().ToLower()} -f image2pipe -";
+            //-rtsp_transport tcp
+            //-qscale:v 5
+            // string inputArgs = $"-y {inputSource.InputCommand}";
+            string inputArgs = $" -y {inputSource.InputCommand}";
+            string outputArgs = $" -qscale:v 1 -r {fps} -c:v {outputFormat.FfmpegCodec} -f image2pipe -";
             
             var startInfo = new ProcessStartInfo
             {
-                FileName = this._ffmpegPath,
+                FileName = exePath,
                 Arguments = $"{inputArgs} {outputArgs}",
                 UseShellExecute = useShellExecute,
                 CreateNoWindow = true,
                 RedirectStandardInput = true,
                 RedirectStandardError = true,
-                RedirectStandardOutput = true,
+                RedirectStandardOutput = true
             };
 
             using (var ffmpegProcess = new Process { StartInfo = startInfo })
             {
                 ffmpegProcess.ErrorDataReceived += this.ProcessDataReceived;
 
+                ffmpegProcess.OutputDataReceived += HandleProcessOutput; 
+                
+                
                 ffmpegProcess.Start();
                 ffmpegProcess.BeginErrorReadLine();
 
@@ -93,7 +103,9 @@ namespace SnapshotRecorder
                     frameOutputStream.Close();
                 }
 
+              
                 ffmpegProcess.ErrorDataReceived -= this.ProcessDataReceived;
+                ffmpegProcess.OutputDataReceived -= HandleProcessOutput; 
 
                 ffmpegProcess.WaitForExit(1000);
 
@@ -104,9 +116,18 @@ namespace SnapshotRecorder
             }
         }
 
+        private void HandleProcessOutput(object sender, DataReceivedEventArgs e)
+        {
+            Console.WriteLine(e.Data);
+        }
+
         private void ProcessDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (e.Data != null) this.FFmpegInfoReceived?.Invoke(e.Data);
+            if (e.Data == null) return;
+            Console.WriteLine(e.Data);
+            // logger.LogError("VideoStreamClient error {eventArgs}", e);
+            FFmpegInfoReceived?.Invoke(e.Data);
+
         }
     }
 }

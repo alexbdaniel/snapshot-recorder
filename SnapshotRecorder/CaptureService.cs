@@ -1,4 +1,6 @@
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using SnapshotRecorder.Configuration;
 
@@ -8,9 +10,13 @@ public class CaptureService : BackgroundService
 {
     private readonly ReceiverOptions receiverOptions;
     private readonly ConfigurationOptions configurationOptions;
+    private readonly ILogger logger;
+    private readonly IServiceScopeFactory serviceScopeFactory;
 
-    public CaptureService(IOptions<ReceiverOptions> options, IOptions<ConfigurationOptions> configurationOptions)
+    public CaptureService(IOptions<ReceiverOptions> options, IOptions<ConfigurationOptions> configurationOptions, ILogger<CaptureService> logger, IServiceScopeFactory serviceScopeFactory)
     {
+        this.logger = logger;
+        this.serviceScopeFactory = serviceScopeFactory;
         this.configurationOptions = configurationOptions.Value;
         this.receiverOptions = options.Value;
     }
@@ -19,35 +25,30 @@ public class CaptureService : BackgroundService
     {
         // var tasks = GetTasks(stoppingToken);
 
-        await Parallel.ForEachAsync(receiverOptions.Cameras, stoppingToken, async (pair, cancellationToken) =>
-        {
-            string cameraName = pair.Key;
-            var captureOptions = pair.Value;
-            
-            var receiver = new Receiver(captureOptions, cameraName, configurationOptions);
-            await receiver.ReceiveAsync(captureOptions.StreamUri, cancellationToken);
-        });
+        var options = receiverOptions.Cameras;
+
+        const string cameraName = "Front";
+        options.TryGetValue(cameraName, out CaptureOptions? captureOptions);
+
+        using IServiceScope scope = serviceScopeFactory.CreateScope();
+        var receiver = scope.ServiceProvider.GetRequiredService<Receiver>();
+        
+        
+        
+        // var receiver = new Receiver(captureOptions!, cameraName, configurationOptions);
+        await receiver.ReceiveAsync(captureOptions, cameraName, stoppingToken);
+        //
+        // await Parallel.ForEachAsync(receiverOptions.Cameras, stoppingToken, async (pair, cancellationToken) =>
+        // {
+        //     string cameraName = pair.Key;
+        //     var captureOptions = pair.Value;
+        //     
+        //     var receiver = new Receiver(captureOptions, cameraName, configurationOptions);
+        //     await receiver.ReceiveAsync(captureOptions.StreamUri, cancellationToken);
+        // });
 
     }
 
-    private List<Task> GetTasks(CancellationToken cancellationToken)
-    {
-        var tasks = new List<Task>();
-        foreach (var camera in receiverOptions.Cameras)
-        {
-            string directoryName = Path.Combine(camera.Value.SaveRootDirectoryName, camera.Value.SaveBaseDirectoryName);
-            var saveDirectory = new DirectoryInfo(camera.Value.SaveRootDirectoryName);
-            var directory = new DirectoryInfo(directoryName); 
-            
-            var receiver = new Receiver(camera.Value, camera.Key, configurationOptions);
-            var task = new Task(() => _ = receiver.ReceiveAsync(camera.Value.StreamUri, cancellationToken));
-            
-            tasks.Add(task);
-
-        }
-
-        return tasks;
-    }
     
     public override async Task StopAsync(CancellationToken cancellationToken)
     {
